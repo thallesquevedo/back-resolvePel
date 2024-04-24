@@ -9,8 +9,8 @@ export const typeormConfig: DataSourceOptions = {
   username: DB_USERNAME,
   password: DB_PASSWORD,
   database: DB_DATABASE,
-  entities: [__dirname + '/../**/*.entity.{js,ts}'],
-  migrations: [__dirname + '/../../migrations/*.{js,ts}'],
+  entities: ['dist/**/*.entity.{js,ts}'],
+  migrations: ['dist/migrations/*.{js,ts}'],
   synchronize: false,
 };
 
