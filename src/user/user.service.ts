@@ -52,6 +52,10 @@ export class UserService {
     return this.userRepository.findOneBy({ phone });
   }
 
+  async findByEmail(email: string) {
+    return this.userRepository.findOneBy({ email });
+  }
+
   async findOne(id: string) {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
