@@ -4,6 +4,8 @@ import * as bcrypt from 'bcrypt';
 import { User } from 'src/user/entities/user.entity';
 import { UserPayload } from './dto/user-payload';
 import { JwtService } from '@nestjs/jwt';
+import { ResponseModel } from 'src/utils/models';
+import { UserToken } from './dto/user-token';
 
 @Injectable()
 export class AuthService {
@@ -12,7 +14,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  login(user: User) {
+  login(user: User): ResponseModel<UserToken> {
     const payload: UserPayload = {
       sub: user.id,
       email: user.email,
