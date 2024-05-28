@@ -11,6 +11,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { User } from './entities/user.entity';
 import { ResponseModel } from 'src/utils/models';
 import { ResponseCreateUserDTO } from './dto/response-create-user.dto';
+import { CheckPhoneRegisterDto } from './dto/check-phone-register.dto';
+import { CheckEmailRegisterDto } from './dto/check-email-register.dto';
 
 @Injectable()
 export class UserService {
@@ -81,5 +83,57 @@ export class UserService {
       throw new HttpException('User not found', HttpStatus.NOT_FOUND);
     }
     return user;
+  }
+
+  async checkPhoneRegister(checkPhoneRegister: CheckPhoneRegisterDto) {
+    const userByPhone = await this.userRepository.findOneBy({
+      phone: checkPhoneRegister.phone,
+    });
+
+    if (userByPhone) {
+      throw new BadRequestException({
+        status: false,
+        mensagem: {
+          codigo: 400,
+          texto: 'Telefone já cadastrado',
+        },
+        conteudo: null,
+      });
+    }
+
+    return {
+      status: true,
+      mensagem: {
+        codigo: 200,
+        texto: 'Telefone disponível',
+      },
+      conteudo: null,
+    };
+  }
+
+  async checkEmailRegister(checkPhoneRegister: CheckEmailRegisterDto) {
+    const userByEmail = await this.userRepository.findOneBy({
+      email: checkPhoneRegister.email,
+    });
+
+    if (userByEmail) {
+      throw new BadRequestException({
+        status: false,
+        mensagem: {
+          codigo: 400,
+          texto: 'Email já cadastrado',
+        },
+        conteudo: null,
+      });
+    }
+
+    return {
+      status: true,
+      mensagem: {
+        codigo: 200,
+        texto: 'Email disponível',
+      },
+      conteudo: null,
+    };
   }
 }
