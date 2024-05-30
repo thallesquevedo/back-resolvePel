@@ -77,6 +77,8 @@ export class UserService {
     return this.userRepository.findOneBy({ email });
   }
 
+  // FAÇA OS TESTES PARA OS METODOS ACIMA PRIMEIRO
+
   async findOne(id: string) {
     const user = await this.userRepository.findOne({ where: { id } });
     if (!user) {
