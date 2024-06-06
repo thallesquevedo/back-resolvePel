@@ -4,7 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { CheckPhoneRegisterDto } from './dto/check-phone-register.dto';
 import { CheckEmailRegisterDto } from './dto/check-email-register.dto';
 
@@ -139,4 +139,32 @@ describe('UserService', () => {
       });
     });
   });
+  describe('findOne', () => {
+    it('should find a user by ID', async () => {
+      const mockUserId = 'someUserId';
+      const mockUser = new User({
+        id: mockUserId,
+        name: 'Mock User',
+        email: 'mock@example.com',
+        phone: '+123456789',
+        cpf: '12345678901',
+      });
+      
+      jest.spyOn(repository, 'findOne').mockResolvedValueOnce(mockUser);
+  
+      const result = await service.findOne(mockUserId);
+  
+      expect(result).toEqual(mockUser);
+    });
+  
+    it('should throw HttpException when user is not found', async () => {
+      const mockUserId = 'invalidUserId';
+      jest.spyOn(repository, 'findOne').mockResolvedValueOnce(undefined);
+  
+      await expect(service.findOne(mockUserId)).rejects.toThrowError(
+        new HttpException('User not found', HttpStatus.NOT_FOUND),
+      );
+    });
+  });
+  
 });
