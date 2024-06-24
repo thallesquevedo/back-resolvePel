@@ -1,7 +1,9 @@
+import { ReqServico } from 'src/req_servico/entities/req_servico.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -30,6 +32,9 @@ export class User {
 
   @CreateDateColumn()
   updated_at: Date;
+
+  @OneToMany(() => ReqServico, (req_servico) => req_servico.user)
+  req_servico: ReqServico[];
 
   constructor(user?: Partial<User>) {
     this.id = user?.id;
