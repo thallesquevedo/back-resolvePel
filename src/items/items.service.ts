@@ -15,11 +15,7 @@ export class ItemsService {
   }
 
   async findAllItems() {
-    try {
-      const items = await this.itemRepository.find();
-      return items;
-    } catch (error) {
-      console.log(error);
-    }
+    const items = await this.itemRepository.find();
+    return items;
   }
 }

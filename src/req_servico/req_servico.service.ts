@@ -7,6 +7,7 @@ import { UserService } from 'src/user/user.service';
 import { DeepPartial, Repository } from 'typeorm';
 import { CreateReqServicoDto } from './dto/create-req_servico.dto';
 import { ReqServico } from './entities/req_servico.entity';
+import { UpdateReqServicoDto } from './dto/update-req_servico.dto';
 
 @Injectable()
 export class ReqServicoService {
@@ -71,5 +72,103 @@ export class ReqServicoService {
       where: { user: { id: user.id } },
       relations: ['servico', 'items'],
     });
+  }
+
+  async updateOrdemServico(
+    reqServicoId: string,
+    user: User,
+    updateReqServicoDto: UpdateReqServicoDto,
+  ) {
+    const { descricao, itemIds, servicoId } = updateReqServicoDto;
+
+    const ordemServico = await this.reqServicoRepository.findOne({
+      where: { id: reqServicoId },
+      relations: ['user', 'servico', 'items'],
+    });
+
+    if (ordemServico.user.id !== user.id) {
+      throw new BadRequestException({
+        status: false,
+        mensagem: {
+          codigo: 400,
+          texto: 'Você não tem permissão para atualizar esta ordem de serviço.',
+        },
+      });
+    }
+
+    if (!ordemServico) {
+      throw new BadRequestException({
+        status: false,
+        mensagem: {
+          codigo: 400,
+          texto: 'Ordem de serviço não encontrada.',
+        },
+      });
+    }
+
+    try {
+      const findServico = await this.servicoService.findOne(servicoId);
+      const findItems = await this.itemService.findAllByIds(itemIds);
+      ordemServico.items = findItems;
+      ordemServico.descricao = descricao;
+      ordemServico.servico = findServico;
+      ordemServico.updated_at = new Date();
+
+      return await this.reqServicoRepository.save(ordemServico);
+    } catch (error) {
+      throw new BadRequestException({
+        status: false,
+        mensagem: {
+          codigo: 400,
+          texto: 'Erro ao atualizar ordem de serviço.',
+        },
+      });
+    }
+  }
+
+  async findPrestadorOrdemServicoById(ordemServicoId: string) {
+    return await this.reqServicoRepository
+      .createQueryBuilder('reqServico')
+      .leftJoinAndSelect('reqServico.user', 'user')
+      .leftJoinAndSelect('reqServico.servico', 'servico')
+      .leftJoinAndSelect('reqServico.items', 'items')
+      .where('reqServico.id = :id', { id: ordemServicoId })
+      .select(['reqServico.id', 'servico', 'items'])
+      .getOne();
+  }
+
+  async findAllByCliente() {
+    return await this.reqServicoRepository
+      .createQueryBuilder('reqServico')
+      .leftJoinAndSelect('reqServico.user', 'user')
+      .leftJoinAndSelect('reqServico.servico', 'servico')
+      .leftJoinAndSelect('reqServico.items', 'items')
+      .select([
+        'reqServico.id',
+        'user.name',
+        'user.email',
+        'user.phone',
+        'servico',
+        'items',
+      ])
+      .getMany();
+  }
+
+  async findClientOrdemSevicoById(ordemServicoId: string) {
+    return await this.reqServicoRepository
+      .createQueryBuilder('reqServico')
+      .leftJoinAndSelect('reqServico.user', 'user')
+      .leftJoinAndSelect('reqServico.servico', 'servico')
+      .leftJoinAndSelect('reqServico.items', 'items')
+      .where('reqServico.id = :id', { id: ordemServicoId })
+      .select([
+        'reqServico.id',
+        'user.name',
+        'user.email',
+        'user.phone',
+        'servico',
+        'items',
+      ])
+      .getOne();
   }
 }

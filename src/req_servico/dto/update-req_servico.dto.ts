@@ -1,4 +1,15 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateReqServicoDto } from './create-req_servico.dto';
+import { IsArray, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
-export class UpdateReqServicoDto extends PartialType(CreateReqServicoDto) {}
+export class UpdateReqServicoDto {
+  @IsNotEmpty()
+  @IsNumber()
+  servicoId: number;
+
+  @IsNotEmpty()
+  @IsArray()
+  itemIds: number[];
+
+  @IsNotEmpty()
+  @IsString()
+  descricao: string;
+}
