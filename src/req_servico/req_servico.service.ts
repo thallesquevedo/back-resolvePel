@@ -133,7 +133,7 @@ export class ReqServicoService {
       .leftJoinAndSelect('reqServico.servico', 'servico')
       .leftJoinAndSelect('reqServico.items', 'items')
       .where('reqServico.id = :id', { id: ordemServicoId })
-      .select(['reqServico.id', 'servico', 'items'])
+      .select(['reqServico.id', 'servico', 'items', 'reqServico.descricao'])
       .getOne();
   }
 
@@ -145,6 +145,7 @@ export class ReqServicoService {
       .leftJoinAndSelect('reqServico.items', 'items')
       .select([
         'reqServico.id',
+        'reqServico.descricao',
         'user.name',
         'user.email',
         'user.phone',
@@ -163,6 +164,7 @@ export class ReqServicoService {
       .where('reqServico.id = :id', { id: ordemServicoId })
       .select([
         'reqServico.id',
+        'reqServico.descricao',
         'user.name',
         'user.email',
         'user.phone',
