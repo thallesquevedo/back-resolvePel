@@ -31,7 +31,7 @@ export class ReqServico {
   @ManyToOne(() => Servico, (servico) => servico.id)
   servico: Servico;
 
-  @ManyToMany(() => Item)
+  @ManyToMany(() => Item, { onDelete: 'CASCADE' })
   @JoinTable()
   items: Item[];
 }

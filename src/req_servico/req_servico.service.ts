@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ItemsService } from 'src/items/items.service';
 import { ServicosService } from 'src/servicos/servicos.service';
@@ -6,8 +10,8 @@ import { User } from 'src/user/entities/user.entity';
 import { UserService } from 'src/user/user.service';
 import { DeepPartial, Repository } from 'typeorm';
 import { CreateReqServicoDto } from './dto/create-req_servico.dto';
-import { ReqServico } from './entities/req_servico.entity';
 import { UpdateReqServicoDto } from './dto/update-req_servico.dto';
+import { ReqServico } from './entities/req_servico.entity';
 
 @Injectable()
 export class ReqServicoService {
@@ -18,6 +22,40 @@ export class ReqServicoService {
     private servicoService: ServicosService,
     private itemService: ItemsService,
   ) {}
+
+  async findAllByUserId(user: User) {
+    return await this.reqServicoRepository.find({
+      where: { user: { id: user.id } },
+      relations: ['servico', 'items'],
+    });
+  }
+
+  async findPrestadorOrdemServicoById(ordemServicoId: string, user: User) {
+    const ordemServico = await this.reqServicoRepository.findOne({
+      where: { id: ordemServicoId },
+      relations: ['user', 'servico', 'items'],
+    });
+
+    if (ordemServico.user.id !== user.id) {
+      throw new BadRequestException({
+        status: false,
+        mensagem: {
+          codigo: 401,
+          texto:
+            'Você não tem permissão para visualizar esta ordem de serviço.',
+        },
+      });
+    }
+
+    return await this.reqServicoRepository
+      .createQueryBuilder('reqServico')
+      .leftJoinAndSelect('reqServico.user', 'user')
+      .leftJoinAndSelect('reqServico.servico', 'servico')
+      .leftJoinAndSelect('reqServico.items', 'items')
+      .where('reqServico.id = :id', { id: ordemServicoId })
+      .select(['reqServico.id', 'servico', 'items', 'reqServico.descricao'])
+      .getOne();
+  }
 
   async createReqServico(user: User, createReqServicoDto: CreateReqServicoDto) {
     const { servicoId, itemIds, descricao } = createReqServicoDto;
@@ -41,7 +79,7 @@ export class ReqServicoService {
       throw new BadRequestException({
         status: false,
         mensagem: {
-          codigo: 400,
+          codigo: 404,
           texto: 'Serviço não encontrado.',
         },
       });
@@ -51,7 +89,7 @@ export class ReqServicoService {
       throw new BadRequestException({
         status: false,
         mensagem: {
-          codigo: 400,
+          codigo: 404,
           texto: 'Item(s) não encontrado(s).',
         },
       });
@@ -65,13 +103,6 @@ export class ReqServicoService {
     } as DeepPartial<ReqServico>);
 
     return await this.reqServicoRepository.save(reqServico);
-  }
-
-  async findAllByUserId(user: User) {
-    return await this.reqServicoRepository.find({
-      where: { user: { id: user.id } },
-      relations: ['servico', 'items'],
-    });
   }
 
   async updateOrdemServico(
@@ -90,7 +121,7 @@ export class ReqServicoService {
       throw new BadRequestException({
         status: false,
         mensagem: {
-          codigo: 400,
+          codigo: 401,
           texto: 'Você não tem permissão para atualizar esta ordem de serviço.',
         },
       });
@@ -100,7 +131,7 @@ export class ReqServicoService {
       throw new BadRequestException({
         status: false,
         mensagem: {
-          codigo: 400,
+          codigo: 404,
           texto: 'Ordem de serviço não encontrada.',
         },
       });
@@ -116,25 +147,43 @@ export class ReqServicoService {
 
       return await this.reqServicoRepository.save(ordemServico);
     } catch (error) {
-      throw new BadRequestException({
+      throw new InternalServerErrorException({
         status: false,
         mensagem: {
-          codigo: 400,
+          codigo: 500,
           texto: 'Erro ao atualizar ordem de serviço.',
         },
       });
     }
   }
 
-  async findPrestadorOrdemServicoById(ordemServicoId: string) {
-    return await this.reqServicoRepository
-      .createQueryBuilder('reqServico')
-      .leftJoinAndSelect('reqServico.user', 'user')
-      .leftJoinAndSelect('reqServico.servico', 'servico')
-      .leftJoinAndSelect('reqServico.items', 'items')
-      .where('reqServico.id = :id', { id: ordemServicoId })
-      .select(['reqServico.id', 'servico', 'items', 'reqServico.descricao'])
-      .getOne();
+  async deleteOrdemServico(ordemServicoId: string, user: User) {
+    const ordemServico = await this.reqServicoRepository.findOne({
+      where: { id: ordemServicoId },
+      relations: ['user', 'servico', 'items'],
+    });
+
+    if (ordemServico.user.id !== user.id) {
+      throw new BadRequestException({
+        status: false,
+        mensagem: {
+          codigo: 401,
+          texto: 'Você não tem permissão para deletar esta ordem de serviço.',
+        },
+      });
+    }
+
+    if (!ordemServico) {
+      throw new BadRequestException({
+        status: false,
+        mensagem: {
+          codigo: 404,
+          texto: 'Ordem de serviço não encontrada.',
+        },
+      });
+    }
+
+    return await this.reqServicoRepository.delete(ordemServicoId);
   }
 
   async findAllByCliente() {

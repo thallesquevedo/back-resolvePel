@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -19,18 +20,6 @@ import { UpdateReqServicoDto } from './dto/update-req_servico.dto';
 export class ReqServicoController {
   constructor(private readonly reqServicoService: ReqServicoService) {}
 
-  @Post()
-  @UseGuards(AuthGuard('jwt'))
-  async create(
-    @Req() req: AuthRequest,
-    @Body() createReqServicoDto: CreateReqServicoDto,
-  ) {
-    return await this.reqServicoService.createReqServico(
-      req.user,
-      createReqServicoDto,
-    );
-  }
-
   @Get()
   @UseGuards(AuthGuard('jwt'))
   async findAllByUser(@Req() req: AuthRequest) {
@@ -41,9 +30,23 @@ export class ReqServicoController {
   @UseGuards(AuthGuard('jwt'))
   async findPrestadorOrdemServicoById(
     @Param() getOrderServicoDto: GetOrdemServicoDto,
+    @Req() req: AuthRequest,
   ) {
     return await this.reqServicoService.findPrestadorOrdemServicoById(
       getOrderServicoDto.id,
+      req.user,
+    );
+  }
+
+  @Post()
+  @UseGuards(AuthGuard('jwt'))
+  async create(
+    @Req() req: AuthRequest,
+    @Body() createReqServicoDto: CreateReqServicoDto,
+  ) {
+    return await this.reqServicoService.createReqServico(
+      req.user,
+      createReqServicoDto,
     );
   }
 
@@ -58,6 +61,18 @@ export class ReqServicoController {
       reqServicoId,
       req.user,
       updateReqServicoDto,
+    );
+  }
+
+  @Delete(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async deleteOrdemServico(
+    @Param('id') ordemServicoId: string,
+    @Req() req: AuthRequest,
+  ) {
+    return await this.reqServicoService.deleteOrdemServico(
+      ordemServicoId,
+      req.user,
     );
   }
 
