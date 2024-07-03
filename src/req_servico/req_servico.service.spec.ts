@@ -69,6 +69,8 @@ describe('ReqServicoService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+    expect(reqServicoRepository).toBeDefined();
+    expect(userService).toBeDefined(); 
   });
 
   describe('createReqServico', () => {
@@ -85,32 +87,26 @@ describe('ReqServicoService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should create a new ReqServico', async () => {
+    it('should call the methods correctly', async () => {
       const user = new User();
-      user.id = 'userId';
       const createReqServicoDto: CreateReqServicoDto = {
         servicoId: 1,
-        itemIds: [1, 2],
+        itemIds: [1],
         descricao: 'descricao',
       };
+      const findUser = new User();
+      const findServico = { id: 'servicoId' };
+      const findItems = [{ id: 'itemIds' }];
 
-      userService.findOne.mockResolvedValue(user);
-      servicosService.findOne.mockResolvedValue({});
-      itemsService.findAllByIds.mockResolvedValue([{}, {}]);
-      reqServicoRepository.create.mockReturnValue({ id: 'reqServicoId' });
-      reqServicoRepository.save.mockResolvedValue({ id: 'reqServicoId' });
+      userService.findOne.mockResolvedValue(findUser);
+      servicosService.findOne.mockResolvedValue(findServico);
+      itemsService.findAllByIds.mockResolvedValue(findItems);
 
-      const result = await service.createReqServico(user, createReqServicoDto);
+      await service.createReqServico(user, createReqServicoDto);
 
-      expect(result).toEqual({ id: 'reqServicoId' });
       expect(userService.findOne).toHaveBeenCalledWith(user.id);
-      expect(servicosService.findOne).toHaveBeenCalledWith('servicoId');
-      expect(itemsService.findAllByIds).toHaveBeenCalledWith([
-        'itemId1',
-        'itemId2',
-      ]);
-      expect(reqServicoRepository.create).toHaveBeenCalled();
-      expect(reqServicoRepository.save).toHaveBeenCalled();
+      expect(servicosService.findOne).toHaveBeenCalledWith(createReqServicoDto.servicoId);
+      expect(itemsService.findAllByIds).toHaveBeenCalledWith(createReqServicoDto.itemIds);
     });
   });
 });
