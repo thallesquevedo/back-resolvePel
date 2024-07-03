@@ -139,6 +139,7 @@ describe('UserService', () => {
       });
     });
   });
+  
   describe('findOne', () => {
     it('should find a user by ID', async () => {
       const mockUserId = 'someUserId';

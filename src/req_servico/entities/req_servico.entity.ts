@@ -34,4 +34,14 @@ export class ReqServico {
   @ManyToMany(() => Item, { onDelete: 'CASCADE' })
   @JoinTable()
   items: Item[];
+
+  constructor(req_servico?: Partial<ReqServico>) {
+    this.id = req_servico?.id;
+    this.descricao = req_servico?.descricao;
+    this.created_at = req_servico?.created_at;
+    this.updated_at = req_servico?.updated_at;
+    this.user = req_servico?.user;
+    this.servico = req_servico?.servico;
+    this.items = req_servico?.items;
+  }
 }

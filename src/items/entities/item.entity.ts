@@ -15,4 +15,10 @@ export class Item {
 
   @CreateDateColumn()
   created_at: Date;
+
+  constructor(item?: Partial<Item>) {
+    this.id = item?.id;
+    this.name = item?.name;
+    this.created_at = item?.created_at;
+  }
 }

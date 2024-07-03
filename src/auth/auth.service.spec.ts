@@ -45,6 +45,7 @@ describe('AuthService', () => {
       phone: '123456789',
       created_at: new Date(),
       updated_at: new Date(),
+      req_servico: [],
     };
   
     jest.spyOn(jwtService, 'sign').mockReturnValueOnce('validToken');
@@ -70,6 +71,7 @@ describe('AuthService', () => {
       phone: '123456789',
       created_at: new Date(),
       updated_at: new Date(),
+      req_servico: [],
     };
 
     jest.spyOn(userService, 'findByEmail').mockResolvedValueOnce(user);
@@ -102,6 +104,7 @@ describe('AuthService', () => {
       phone: '123456789',
       created_at: new Date(),
       updated_at: new Date(),
+      req_servico: [],
     };
 
     jest.spyOn(userService, 'findByEmail').mockResolvedValueOnce(user);

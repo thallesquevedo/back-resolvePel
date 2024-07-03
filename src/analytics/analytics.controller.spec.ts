@@ -3,18 +3,41 @@ import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
 
 describe('AnalyticsController', () => {
-  let controller: AnalyticsController;
+  let analyticsController: AnalyticsController;
+  let analyticsService: AnalyticsService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [AnalyticsController],
-      providers: [AnalyticsService],
+      providers: [
+        {
+          provide: AnalyticsService,
+          useValue: {
+            addView: jest.fn(),
+          },
+        }
+      ],
     }).compile();
 
-    controller = module.get<AnalyticsController>(AnalyticsController);
+    analyticsController = module.get<AnalyticsController>(AnalyticsController);
+    analyticsService = module.get<AnalyticsService>(AnalyticsService);
   });
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(analyticsController).toBeDefined();
+  });
+
+  describe('addView', () => {
+    it('should call addView method of analyticsService', async () => {
+      await analyticsController.addView();
+      expect(analyticsService.addView).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle error when addView method of analyticsService throws an error', async () => {
+      const errorMessage = 'Error adding view';
+      jest.spyOn(analyticsService, 'addView').mockRejectedValue(new Error(errorMessage));
+
+      await expect(analyticsController.addView()).rejects.toThrow(errorMessage);
+    });
   });
 });

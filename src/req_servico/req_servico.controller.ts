@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CreateReqServicoDto } from './dto/create-req_servico.dto';
-import { ReqServicoService } from './req_servico.service';
+import { ReqServicoService } from '../req_servico/req_servico.service';
 import { AuthRequest } from 'src/auth/dto/auth-request';
 import { AuthGuard } from '@nestjs/passport';
 import { GetOrdemServicoDto } from './dto/get-ordem-servico.dto';

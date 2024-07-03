@@ -7,4 +7,9 @@ export class Analytics {
 
   @Column({ default: 0 })
   count: number;
+
+  constructor(analytics?: Partial<Analytics>) {
+    this.id = analytics?.id;
+    this.count = analytics?.count;
+  }
 }

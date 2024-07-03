@@ -45,5 +45,6 @@ export class User {
     this.phone = user?.phone;
     this.created_at = user?.created_at;
     this.updated_at = user?.updated_at;
+    this.req_servico = user?.req_servico;
   }
 }
