@@ -90,8 +90,17 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
-     "moduleNameMapper": {
+    "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/$1"
-    }
+    },
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/migrations/",
+      "/guards/",
+      "/strategies/",
+      "/config/",
+      ".*\\.module\\.(t|j)s$",
+      ".*\\.entity\\.(t|j)s$"
+    ]
   }
 }

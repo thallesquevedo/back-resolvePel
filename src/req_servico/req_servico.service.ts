@@ -27,6 +27,7 @@ export class ReqServicoService {
     return await this.reqServicoRepository.find({
       where: { user: { id: user.id } },
       relations: ['servico', 'items'],
+      order: { created_at: 'DESC' },
     });
   }
 
