@@ -223,4 +223,21 @@ export class UserService {
       });
     }
   }
+
+  async userInfos(user: User) {
+    const userFromDB = await this.userRepository.findOneBy({ id: user.id });
+
+    return {
+      status: true,
+      mensagem: {
+        codigo: 200,
+        texto: 'Informações do usuário',
+      },
+      conteudo: {
+        name: userFromDB.name,
+        email: userFromDB.email,
+        phone: userFromDB.phone,
+      },
+    };
+  }
 }

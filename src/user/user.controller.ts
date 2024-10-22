@@ -1,4 +1,12 @@
-import { Body, Controller, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Patch,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthRequest } from 'src/auth/dto/auth-request';
 import { CheckEmailRegisterDto } from './dto/check-email-register.dto';
@@ -15,7 +23,7 @@ export class UserController {
     return this.userService.create(createUserDto);
   }
 
-  @Patch('/me')
+  @Patch('me')
   @UseGuards(AuthGuard('jwt'))
   async updateMe(
     @Req() req: AuthRequest,
@@ -32,5 +40,11 @@ export class UserController {
   @Post('check-email-register')
   checkEmailRegister(@Body() checkEmailRegisterDto: CheckEmailRegisterDto) {
     return this.userService.checkEmailRegister(checkEmailRegisterDto);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  async userInfos(@Req() req: AuthRequest) {
+    return await this.userService.userInfos(req.user);
   }
 }
