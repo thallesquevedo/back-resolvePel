@@ -216,7 +216,7 @@ export class UserService {
       throw new BadRequestException({
         status: false,
         mensagem: {
-          codigo: 400,
+          codigo: error.response.mensagem.codigo,
           texto: error.response.mensagem.texto,
         },
         conteudo: null,
