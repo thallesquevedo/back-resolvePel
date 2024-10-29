@@ -7,6 +7,8 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { BadRequestException, HttpException, HttpStatus } from '@nestjs/common';
 import { CheckPhoneRegisterDto } from './dto/check-phone-register.dto';
 import { CheckEmailRegisterDto } from './dto/check-email-register.dto';
+import { UpdateUserInfoDto } from './dto/update-user-info.dto';
+import { SelectQueryBuilder } from 'typeorm';
 
 const userList = [
   new User({
@@ -55,6 +57,7 @@ describe('UserService', () => {
             findByPhone: jest.fn().mockRejectedValueOnce(BadRequestException),
             findByEmail: jest.fn().mockRejectedValueOnce(BadRequestException),
             findOne: jest.fn(),
+            createQueryBuilder: jest.fn(),
           },
         },
       ],
@@ -168,4 +171,142 @@ describe('UserService', () => {
     });
   });
   
+  describe('updateUserInfos (updateMe)', () => {
+    const mockUser = new User({
+      id: 'mockUserId',
+      name: 'João',
+      email: 'joao@gmail.com',
+      phone: '+5553123456789',
+      cpf: '12345678901',
+    });
+
+    it('deve lançar erro quando nenhum dado é fornecido para atualização', async () => {
+      const mockUser = new User({ id: '1', name: 'João' });
+  
+      await expect(service.updateUserInfos(mockUser, {} as any)).rejects.toThrow(
+        new BadRequestException({
+          status: false,
+          mensagem: {
+            codigo: 400,
+            texto: 'Nenhum dado para atualizar',
+          },
+          conteudo: null,
+        }),
+      );
+    });
+
+    it('deve lançar erro quando o telefone já está em uso por outro usuário', async () => {
+      const updateUserInfoDto: UpdateUserInfoDto = {
+        phone: '+5553987654321',
+      };
+
+  
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(1),
+      } as any);
+
+      await expect(service.updateUserInfos(mockUser, updateUserInfoDto)).rejects.toThrow(
+        new BadRequestException({
+          status: false,
+          mensagem: {
+            codigo: 402,
+            texto: 'Telefone já está em uso por outro usuário',
+          },
+        }),
+      );
+    });
+
+    it('deve lançar erro quando o email já está em uso por outro usuário', async () => {
+      const updateUserInfoDto: UpdateUserInfoDto = {
+        email: 'outroemail@gmail.com',
+      };
+
+      // Simular que o email já existe
+      jest.spyOn(repository, 'createQueryBuilder').mockReturnValue({
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getCount: jest.fn().mockResolvedValue(1), 
+      } as any);
+
+      await expect(service.updateUserInfos(mockUser, updateUserInfoDto)).rejects.toThrow(
+        new BadRequestException({
+          status: false,
+          mensagem: {
+            codigo: 401,
+            texto: 'Email já está em uso por outro usuário',
+          },
+        }),
+      );
+    });
+
+    it('deve atualizar as informações do usuário com sucesso', async () => {
+      const updateUserInfoDto: UpdateUserInfoDto = {
+        email: 'novoemail@gmail.com',
+        phone: '+5553987654321',
+    };
+
+    // Simular o retorno de createQueryBuilder
+    const queryBuilder = {
+        getCount: jest.fn().mockResolvedValueOnce(0), // Simula que o telefone não está em uso
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        returning: jest.fn().mockReturnThis(),
+        execute: jest.fn().mockResolvedValueOnce({
+            raw: [{ ...mockUser, ...updateUserInfoDto, updated_at: new Date() }],
+        }),
+    } as unknown as SelectQueryBuilder<User>; // Aqui é feito o typecast
+
+    // Mock para criar o QueryBuilder
+    jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilder);
+
+    const result = await service.updateUserInfos(mockUser, updateUserInfoDto);
+
+    expect(result).toEqual({
+        status: true,
+        mensagem: {
+            codigo: 200,
+            texto: 'Usuário atualizado com sucesso',
+        },
+        conteudo: {
+            ...mockUser,
+            ...updateUserInfoDto,
+            updated_at: expect.any(Date),
+        },
+      });
+    });
+  });
+
+  describe('userInfos', () => {
+    it('deve retornar as informações do usuário', async () => {
+      const mockUserId = 'mockUserId';
+      const mockUser = new User({
+        id: mockUserId,
+        name: 'João',
+        email: 'joao@gmail.com',
+        phone: '+5553123456789',
+        cpf: '12345678901',
+      });
+  
+      // Simula o retorno do método findOneBy
+      jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(mockUser);
+  
+      const result = await service.userInfos(mockUser);
+  
+      expect(result).toEqual({
+        status: true,
+        mensagem: {
+          codigo: 200,
+          texto: 'Informações do usuário',
+        },
+        conteudo: {
+          name: mockUser.name,
+          email: mockUser.email,
+          phone: mockUser.phone,
+        },
+      });
+    });
+  });
+
 });
