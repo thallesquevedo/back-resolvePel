@@ -12,6 +12,8 @@ import { DeepPartial, Repository } from 'typeorm';
 import { CreateReqServicoDto } from './dto/create-req_servico.dto';
 import { UpdateReqServicoDto } from './dto/update-req_servico.dto';
 import { ReqServico } from './entities/req_servico.entity';
+import { DEFAULT_PAGE_SIZE } from 'src/utils/constants';
+import { PaginationDTO } from './dto/pagination.dto';
 
 @Injectable()
 export class ReqServicoService {
@@ -23,12 +25,24 @@ export class ReqServicoService {
     private itemService: ItemsService,
   ) {}
 
-  async findAllByUserId(user: User) {
-    return await this.reqServicoRepository.find({
+  async findAllByUserId(user: User, paginationDTO: PaginationDTO) {
+    const limit = paginationDTO.limit ?? DEFAULT_PAGE_SIZE;
+    const page = paginationDTO.skip ?? 1;
+
+    const [result, total] = await this.reqServicoRepository.findAndCount({
       where: { user: { id: user.id } },
       relations: ['servico', 'items'],
       order: { created_at: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
     });
+
+    return {
+      data: result,
+      count: total,
+      page,
+      limit,
+    };
   }
 
   async findPrestadorOrdemServicoById(ordemServicoId: string, user: User) {
@@ -187,8 +201,12 @@ export class ReqServicoService {
     return await this.reqServicoRepository.delete(ordemServicoId);
   }
 
-  async findAllByCliente() {
-    return await this.reqServicoRepository
+  async findAllByCliente(paginationDTO: PaginationDTO) {
+    const limit = paginationDTO.limit ?? DEFAULT_PAGE_SIZE;
+    const page = paginationDTO.skip ?? 1;
+    const search = paginationDTO.search;
+
+    const query = await this.reqServicoRepository
       .createQueryBuilder('reqServico')
       .leftJoinAndSelect('reqServico.user', 'user')
       .leftJoinAndSelect('reqServico.servico', 'servico')
@@ -202,7 +220,21 @@ export class ReqServicoService {
         'servico',
         'items',
       ])
-      .getMany();
+      .skip((page - 1) * limit)
+      .take(limit);
+
+    if (search) {
+      query.andWhere('servico.name = :search', { search });
+    }
+
+    const [result, total] = await query.getManyAndCount();
+
+    return {
+      data: result,
+      count: total,
+      page,
+      limit,
+    };
   }
 
   async findClientOrdemSevicoById(ordemServicoId: string) {

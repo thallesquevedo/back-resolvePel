@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -15,6 +16,7 @@ import { AuthRequest } from 'src/auth/dto/auth-request';
 import { AuthGuard } from '@nestjs/passport';
 import { GetOrdemServicoDto } from './dto/get-ordem-servico.dto';
 import { UpdateReqServicoDto } from './dto/update-req_servico.dto';
+import { PaginationDTO } from './dto/pagination.dto';
 
 @Controller('req-servico')
 export class ReqServicoController {
@@ -22,8 +24,14 @@ export class ReqServicoController {
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  async findAllByUser(@Req() req: AuthRequest) {
-    return await this.reqServicoService.findAllByUserId(req.user);
+  async findAllByUser(
+    @Req() req: AuthRequest,
+    @Query() paginationDTO: PaginationDTO,
+  ) {
+    return await this.reqServicoService.findAllByUserId(
+      req.user,
+      paginationDTO,
+    );
   }
 
   @Get(':id')
@@ -77,11 +85,13 @@ export class ReqServicoController {
   }
 
   @Get('cliente/all')
-  async findAllByCliente() {
-    return await this.reqServicoService.findAllByCliente();
+  @UseGuards(AuthGuard('jwt'))
+  async findAllByCliente(@Query() paginationDTO: PaginationDTO) {
+    return await this.reqServicoService.findAllByCliente(paginationDTO);
   }
 
   @Get('cliente/:id')
+  @UseGuards(AuthGuard('jwt'))
   async findClientOrdemSevicoById(
     @Param() getOrdemServicoDto: GetOrdemServicoDto,
   ) {
