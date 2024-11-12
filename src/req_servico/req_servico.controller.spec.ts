@@ -6,6 +6,7 @@ import { CreateReqServicoDto } from './dto/create-req_servico.dto';
 import { AuthRequest } from 'src/auth/dto/auth-request';
 import { GetOrdemServicoDto } from './dto/get-ordem-servico.dto';
 import { UpdateReqServicoDto } from './dto/update-req_servico.dto'; 
+import { PaginationDTO } from './dto/pagination.dto';
 
 describe('ReqServicoController', () => {
   let reqServiceController: ReqServicoController;
@@ -49,22 +50,41 @@ describe('ReqServicoController', () => {
     it('should return a list of services for an authenticated user', async () => {
       const mockUser = {
         id: 'user123',
-        name: 'João Souza',
-        email: 'joao@email.com',
-        password: '123456789',
-        cpf: '12345678901',
-        phone: '53999999999',
-        created_at: new Date(),
-        updated_at: new Date(),
-        req_servico: [],
+        name: 'João Souza'
       };
-      const mockServices = [{ id: 'service1' }, { id: 'service2' }];
-      (reqServicoService.findAllByUserId as jest.Mock).mockResolvedValue(mockServices);
+
+      const mockPaginatedServices = {
+        data: [{ id: 'service1' }, { id: 'service2' }],
+        page: 1, 
+        limit: 10,
+        totalCount: 2,
+      };
+
+      const page = 1;
+      const limit = 10;
+
+      (reqServicoService.findAllByUserId as jest.Mock).mockResolvedValue(mockPaginatedServices);
   
-      const result = await reqServiceController.findAllByUser({ user: mockUser } as AuthRequest);
+      const result = await reqServiceController.findAllByUser(
+        { user: mockUser } as unknown as AuthRequest, // Conversão de tipo para evitar interferência de tipos
+        page,
+        limit,
+        { page, limit } as unknown as PaginationDTO
+      );
+
+      expect(result).toEqual(
+        expect.objectContaining({
+          data: expect.arrayContaining([expect.objectContaining({ id: 'service1' }), expect.objectContaining({ id: 'service2' })]),
+          page: 1,
+          limit: 10,
+          totalCount: 2,
+        })
+      );
   
-      expect(result).toBe(mockServices);
-      expect(reqServicoService.findAllByUserId).toHaveBeenCalledWith(mockUser);
+      expect(reqServicoService.findAllByUserId).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'user123', name: 'João Souza' }),
+        expect.objectContaining({ limit: 10, page: 1 })
+      );
     });
   });
 

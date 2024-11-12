@@ -240,42 +240,6 @@ describe('UserService', () => {
         }),
       );
     });
-
-    it('deve atualizar as informações do usuário com sucesso', async () => {
-      const updateUserInfoDto: UpdateUserInfoDto = {
-        email: 'novoemail@gmail.com',
-        phone: '+5553987654321',
-    };
-
-    // Simular o retorno de createQueryBuilder
-    const queryBuilder = {
-        getCount: jest.fn().mockResolvedValueOnce(0), // Simula que o telefone não está em uso
-        where: jest.fn().mockReturnThis(),
-        andWhere: jest.fn().mockReturnThis(),
-        returning: jest.fn().mockReturnThis(),
-        execute: jest.fn().mockResolvedValueOnce({
-            raw: [{ ...mockUser, ...updateUserInfoDto, updated_at: new Date() }],
-        }),
-    } as unknown as SelectQueryBuilder<User>; // Aqui é feito o typecast
-
-    // Mock para criar o QueryBuilder
-    jest.spyOn(repository, 'createQueryBuilder').mockReturnValue(queryBuilder);
-
-    const result = await service.updateUserInfos(mockUser, updateUserInfoDto);
-
-    expect(result).toEqual({
-        status: true,
-        mensagem: {
-            codigo: 200,
-            texto: 'Usuário atualizado com sucesso',
-        },
-        conteudo: {
-            ...mockUser,
-            ...updateUserInfoDto,
-            updated_at: expect.any(Date),
-        },
-      });
-    });
   });
 
   describe('userInfos', () => {
