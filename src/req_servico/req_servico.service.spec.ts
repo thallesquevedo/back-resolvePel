@@ -1,5 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { plainToInstance } from 'class-transformer';
+import { validate } from 'class-validator';
 import {
   BadRequestException,
   InternalServerErrorException,
@@ -11,9 +13,7 @@ import { ServicosService } from 'src/servicos/servicos.service';
 import { ItemsService } from 'src/items/items.service';
 import { User } from 'src/user/entities/user.entity';
 import { PaginationDTO } from './dto/pagination.dto';
-import { find, skip } from 'rxjs';
 import { CreateReqServicoDto } from './dto/create-req_servico.dto';
-import { exec } from 'child_process';
 
 describe('ReqServicoService', () => {
   let service: ReqServicoService;
@@ -77,21 +77,107 @@ describe('ReqServicoService', () => {
     expect(service).toBeDefined();
   });
 
+    describe('findClientOrdemSevicoById', () => {
+    it('should return a specific service order by client', async () => {
+      const ordemServicoId = '1';
+      const result = { id: ordemServicoId, descricao: 'test' };
+      reqServicoRepository
+        .createQueryBuilder()
+        .getOne.mockResolvedValue(result);
+
+      expect(await service.findClientOrdemSevicoById(ordemServicoId)).toBe(
+        result,
+      );
+      expect(reqServicoRepository.createQueryBuilder).toHaveBeenCalled();
+    });
+  });
+
+  describe('deleteOrdemServico', () => {
+    it('should delete an existing service order', async () => {
+      const ordemServicoId = '1';
+      const user = { id: '1' } as User;
+      const ordemServico = { id: ordemServicoId, user } as any;
+      reqServicoRepository.findOne.mockResolvedValue(ordemServico);
+
+      await service.deleteOrdemServico(ordemServicoId, user);
+
+      expect(reqServicoRepository.findOne).toHaveBeenCalledWith({
+        where: { id: ordemServicoId },
+        relations: ['user', 'servico', 'items'],
+      });
+      expect(reqServicoRepository.delete).toHaveBeenCalledWith(ordemServicoId);
+    });
+
+    it('should throw BadRequestException if user does not match', async () => {
+      const ordemServicoId = '1';
+      const user = { id: '1' } as User;
+      const ordemServico = { id: ordemServicoId, user: { id: 2 } } as any;
+      reqServicoRepository.findOne.mockResolvedValue(ordemServico);
+
+      await expect(
+        service.deleteOrdemServico(ordemServicoId, user),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
   describe('findAllByCliente', () => {
-    // it('should return all services by client', async () => {
-    //   const result = { data: [{ id: 1, descricao: 'test' }], count: 1, page: 1, limit: 10 };
-    //   const paginationDTO = { page: 1, skip: 1, limit: 10, search: "" }; // Definindo o objeto paginationDTO
-    
-    //   reqServicoRepository.createQueryBuilder().getMany.mockResolvedValue(result.data);
-    //   reqServicoRepository.createQueryBuilder().getCount.mockResolvedValue(result.count);
-    
-    //   const serviceResult = await service.findAllByCliente(paginationDTO);
-    
-    //   expect(serviceResult).toEqual(result);
-    //   expect(reqServicoRepository.createQueryBuilder).toHaveBeenCalled();
-    // });
+    it('should return all services by client with pagination and no search filter', async () => {
+      const resultData = [{ id: 1, descricao: 'test' }];
+      const totalCount = 1;
+      const paginationDTO = { page: 1, skip: 1, limit: 10, search: "" };
+  
+      const queryBuilderMock = {
+        andWhere: jest.fn().mockReturnThis(),
+        skip: jest.fn().mockReturnThis(),
+        take: jest.fn().mockReturnThis(),
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        select: jest.fn().mockReturnThis(),
+        getManyAndCount: jest.fn().mockResolvedValue([resultData, totalCount]),
+      };
+  
+      jest.spyOn(reqServicoRepository, 'createQueryBuilder').mockReturnValue(queryBuilderMock as any);
+
+      const serviceResult = await service.findAllByCliente(paginationDTO);
+
+      expect(serviceResult).toEqual({
+        data: resultData,
+        count: totalCount,
+        page: paginationDTO.page,
+        limit: paginationDTO.limit,
+      });
+      expect(reqServicoRepository.createQueryBuilder).toHaveBeenCalled();
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('reqServico.user', 'user');
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('reqServico.servico', 'servico');
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('reqServico.items', 'items');
+      expect(queryBuilderMock.skip).toHaveBeenCalledWith((paginationDTO.page - 1) * paginationDTO.limit);
+      expect(queryBuilderMock.take).toHaveBeenCalledWith(paginationDTO.limit);
+      expect(queryBuilderMock.andWhere).not.toHaveBeenCalled();
+    });
   });
  
+  describe('PaginationDTO', () => {
+    it('should transform skip and limit to numbers', async () => {
+      const dto = plainToInstance(PaginationDTO, { skip: '5', limit: '10' });
+      
+      expect(dto.skip).toBe(5); // Verifica que o skip foi convertido para número
+      expect(dto.limit).toBe(10); // Verifica que o limit foi convertido para número
+    });
+  
+    it('should pass validation when skip and limit are positive numbers', async () => {
+      const dto = plainToInstance(PaginationDTO, { skip: 5, limit: 10 });
+      const errors = await validate(dto);
+  
+      expect(errors.length).toBe(0); // Nenhum erro significa que a validação passou
+    });
+  
+    it('should fail validation when skip or limit are not positive numbers', async () => {
+      const dto = plainToInstance(PaginationDTO, { skip: -5, limit: 0 });
+      const errors = await validate(dto);
+  
+      expect(errors.length).toBeGreaterThan(0); // Deve haver erros para valores negativos ou zero
+      expect(errors.map(e => e.property)).toEqual(expect.arrayContaining(['skip', 'limit']));
+    });
+  });
   describe('findAllByUserId', () => {
     it('should return paginated reqServico for a user', async () => {
     
@@ -326,48 +412,5 @@ describe('ReqServicoService', () => {
         service.updateOrdemServico(reqServicoId, user, updateReqServicoDto),
       ).rejects.toThrow(InternalServerErrorException);
     });
-
   });
-  // describe('deleteOrdemServico', () => {
-  //   it('should delete an existing service order', async () => {
-  //     const ordemServicoId = '1';
-  //     const user = { id: '1' } as User;
-  //     const ordemServico = { id: ordemServicoId, user } as any;
-  //     reqServicoRepository.findOne.mockResolvedValue(ordemServico);
-
-  //     await service.deleteOrdemServico(ordemServicoId, user);
-
-  //     expect(reqServicoRepository.findOne).toHaveBeenCalledWith({
-  //       where: { id: ordemServicoId },
-  //       relations: ['user', 'servico', 'items'],
-  //     });
-  //     expect(reqServicoRepository.delete).toHaveBeenCalledWith(ordemServicoId);
-  //   });
-
-  //   it('should throw BadRequestException if user does not match', async () => {
-  //     const ordemServicoId = '1';
-  //     const user = { id: '1' } as User;
-  //     const ordemServico = { id: ordemServicoId, user: { id: 2 } } as any;
-  //     reqServicoRepository.findOne.mockResolvedValue(ordemServico);
-
-  //     await expect(
-  //       service.deleteOrdemServico(ordemServicoId, user),
-  //     ).rejects.toThrow(BadRequestException);
-  //   });
-  // });
-
-  // describe('findClientOrdemSevicoById', () => {
-  //   it('should return a specific service order by client', async () => {
-  //     const ordemServicoId = '1';
-  //     const result = { id: ordemServicoId, descricao: 'test' };
-  //     reqServicoRepository
-  //       .createQueryBuilder()
-  //       .getOne.mockResolvedValue(result);
-
-  //     expect(await service.findClientOrdemSevicoById(ordemServicoId)).toBe(
-  //       result,
-  //     );
-  //     expect(reqServicoRepository.createQueryBuilder).toHaveBeenCalled();
-  //   });
-  // });
 //});
