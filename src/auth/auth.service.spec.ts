@@ -46,6 +46,8 @@ describe('AuthService', () => {
       created_at: new Date(),
       updated_at: new Date(),
       req_servico: [],
+      comentarios: [],
+      analytics: []
     };
   
     jest.spyOn(jwtService, 'sign').mockReturnValueOnce('validToken');
@@ -72,6 +74,8 @@ describe('AuthService', () => {
       created_at: new Date(),
       updated_at: new Date(),
       req_servico: [],
+      comentarios: [],
+      analytics: []
     };
 
     jest.spyOn(userService, 'findByEmail').mockResolvedValueOnce(user);
@@ -105,6 +109,8 @@ describe('AuthService', () => {
       created_at: new Date(),
       updated_at: new Date(),
       req_servico: [],
+      comentarios: [],
+      analytics: []
     };
 
     jest.spyOn(userService, 'findByEmail').mockResolvedValueOnce(user);

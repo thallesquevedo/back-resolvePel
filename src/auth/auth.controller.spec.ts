@@ -52,7 +52,9 @@ describe('AuthController', () => {
       phone: '123456789',
       created_at: new Date(),
       updated_at: new Date(),
-      req_servico: [], 
+      req_servico: [],
+      comentarios: [],
+      analytics: []
     };
     
     const authRequest: AuthRequest = { user: user } as AuthRequest;

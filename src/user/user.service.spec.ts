@@ -252,8 +252,7 @@ describe('UserService', () => {
         phone: '+5553123456789',
         cpf: '12345678901',
       });
-  
-      // Simula o retorno do método findOneBy
+
       jest.spyOn(repository, 'findOneBy').mockResolvedValueOnce(mockUser);
   
       const result = await service.userInfos(mockUser);
@@ -273,4 +272,86 @@ describe('UserService', () => {
     });
   });
 
+  describe('UserService Additional Tests', () => {
+    describe('create', () => {
+      it('should throw an error if saving the user fails', async () => {
+        const data: CreateUserDto = {
+          name: 'João',
+          email: 'joao@gmail.com',
+          password: '12345678',
+          cpf: '12345678901',
+          phone: '+5553123456789',
+        };
+  
+        jest.spyOn(repository, 'save').mockRejectedValueOnce(new Error('Database error'));
+  
+        await expect(service.create(data)).rejects.toThrowError('Database error');
+      });
+    });
+  
+    describe('checkPhoneRegister', () => {
+      it('should handle unexpected errors when checking phone', async () => {
+        const data: CheckPhoneRegisterDto = { phone: '+5553123456789' };
+  
+        jest.spyOn(repository, 'findOneBy').mockRejectedValueOnce(new Error('Unexpected error'));
+  
+        await expect(service.checkPhoneRegister(data)).rejects.toThrowError('Unexpected error');
+      });
+    });
+  
+    describe('checkEmailRegister', () => {
+      it('should handle unexpected errors when checking email', async () => {
+        const data: CheckEmailRegisterDto = { email: 'joao@gmail.com' };
+  
+        jest.spyOn(repository, 'findOneBy').mockRejectedValueOnce(new Error('Unexpected error'));
+  
+        await expect(service.checkEmailRegister(data)).rejects.toThrowError('Unexpected error');
+      });
+    });
+  
+    describe('updateUserInfos', () => {
+      const mockUser = new User({
+        id: 'mockUserId',
+        name: 'João',
+        email: 'joao@gmail.com',
+        phone: '+5553123456789',
+        cpf: '12345678901',
+      });
+  
+      it('should successfully update user information', async () => {
+        const updateUserInfoDto: UpdateUserInfoDto = {
+          name: 'Updated Name',
+          email: 'updatedemail@gmail.com',
+          phone: '+5553987654321',
+        };
+  
+        jest.spyOn(repository, 'createQueryBuilder').mockReturnValue({
+          where: jest.fn().mockReturnThis(),
+          andWhere: jest.fn().mockReturnThis(),
+          getCount: jest.fn().mockResolvedValue(0),
+          update: jest.fn().mockReturnThis(),
+          set: jest.fn().mockReturnThis(),
+          returning: jest.fn().mockReturnThis(),
+          execute: jest.fn().mockResolvedValue({
+            raw: [{ ...mockUser, ...updateUserInfoDto }],
+          }),
+        } as any);
+  
+        const result = await service.updateUserInfos(mockUser, updateUserInfoDto);
+  
+        expect(result).toEqual({
+          status: true,
+          mensagem: {
+            codigo: 200,
+            texto: 'Usuário atualizado com sucesso',
+          },
+          conteudo: {
+            name: updateUserInfoDto.name,
+            email: updateUserInfoDto.email,
+            phone: updateUserInfoDto.phone,
+          },
+        });
+      });
+    });
+  });
 });

@@ -1,6 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnalyticsController } from './analytics.controller';
 import { AnalyticsService } from './analytics.service';
+import { AddViewDto } from './dto/add-view.dto';
+import { AuthRequest } from 'src/auth/dto/auth-request';
 
 describe('AnalyticsController', () => {
   let analyticsController: AnalyticsController;
@@ -15,7 +17,7 @@ describe('AnalyticsController', () => {
           useValue: {
             addView: jest.fn(),
           },
-        }
+        },
       ],
     }).compile();
 
@@ -28,8 +30,16 @@ describe('AnalyticsController', () => {
   });
 
   describe('addView', () => {
+    const mockUser = { id: 'user-id', email: 'user@example.com' };
+    const mockReq = { user: mockUser } as AuthRequest;
+    const mockAddViewDto: AddViewDto = { 
+      reqServicoId: 'service-request-id',
+    };
+
     it('should call addView method of analyticsService', async () => {
-      await analyticsController.addView();
+      await analyticsController.addView(mockReq, mockAddViewDto);
+
+      expect(analyticsService.addView).toHaveBeenCalledWith(mockUser, mockAddViewDto);
       expect(analyticsService.addView).toHaveBeenCalledTimes(1);
     });
 
@@ -37,7 +47,9 @@ describe('AnalyticsController', () => {
       const errorMessage = 'Error adding view';
       jest.spyOn(analyticsService, 'addView').mockRejectedValue(new Error(errorMessage));
 
-      await expect(analyticsController.addView()).rejects.toThrow(errorMessage);
+      await expect(
+        analyticsController.addView(mockReq, mockAddViewDto),
+      ).rejects.toThrow(errorMessage);
     });
   });
 });

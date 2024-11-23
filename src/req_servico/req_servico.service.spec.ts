@@ -97,13 +97,15 @@ describe('ReqServicoService', () => {
       const ordemServicoId = '1';
       const user = { id: '1' } as User;
       const ordemServico = { id: ordemServicoId, user } as any;
-      reqServicoRepository.findOne.mockResolvedValue(ordemServico);
-
+    
+      jest.spyOn(reqServicoRepository, 'findOne').mockResolvedValue(ordemServico);
+      jest.spyOn(reqServicoRepository, 'delete').mockResolvedValue({ affected: 1 } as any);
+    
       await service.deleteOrdemServico(ordemServicoId, user);
-
+    
       expect(reqServicoRepository.findOne).toHaveBeenCalledWith({
         where: { id: ordemServicoId },
-        relations: ['user', 'servico', 'items'],
+        relations: ['user', 'servico', 'items', 'comentarios'],
       });
       expect(reqServicoRepository.delete).toHaveBeenCalledWith(ordemServicoId);
     });
@@ -205,29 +207,33 @@ describe('ReqServicoService', () => {
       expectedReqServico.id = reqServicoId; 
       expectedReqServico.user = new User(); 
       expectedReqServico.user.id = user.id;
-      
-      jest.spyOn(reqServicoRepository, 'findOne').mockResolvedValue({
+    
+      jest.spyOn(reqServicoRepository, 'findOne').mockResolvedValueOnce({
         id: reqServicoId,
-        user,
+        user: { id: user.id },
         servico: {},
         items: [],
+        comentarios: [],
       } as any);
       
-      jest.spyOn(reqServicoRepository, 'createQueryBuilder').mockImplementation(() => ({
+      const queryBuilderMock = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
-        getOne: jest.fn().mockResolvedValue(expectedReqServico),
-      } as any));
+        getOne: jest.fn().mockResolvedValueOnce(expectedReqServico),
+      };
+    
+      jest.spyOn(reqServicoRepository, 'createQueryBuilder').mockImplementation(() => queryBuilderMock as any);
     
       const result = await service.findPrestadorOrdemServicoById(reqServicoId, user);
     
       expect(result).toStrictEqual(expectedReqServico);
       expect(reqServicoRepository.findOne).toHaveBeenCalledWith({
         where: { id: reqServicoId },
-        relations: ['user', 'servico', 'items'],
+        relations: ['user', 'servico', 'items', 'comentarios'],
       });
-      });
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledTimes(4); // Verifica se todos os joins foram aplicados
+      expect(queryBuilderMock.getOne).toHaveBeenCalled();
     });
 
     it('should throw BadRequestException if user does not match', async () => {
@@ -413,4 +419,4 @@ describe('ReqServicoService', () => {
       ).rejects.toThrow(InternalServerErrorException);
     });
   });
-//});
+});
