@@ -1,3 +1,5 @@
+import { Analytics } from 'src/analytics/entities/analytics.entity';
+import { Comentario } from 'src/comentarios/entities/comentario.entity';
 import { ReqServico } from 'src/req_servico/entities/req_servico.entity';
 import {
   Column,
@@ -35,6 +37,12 @@ export class User {
 
   @OneToMany(() => ReqServico, (req_servico) => req_servico.user)
   req_servico: ReqServico[];
+
+  @OneToMany(() => Comentario, (comentario) => comentario.user)
+  comentarios: Comentario[];
+
+  @OneToMany(() => Analytics, (analytics) => analytics.user)
+  analytics: Analytics[];
 
   constructor(user?: Partial<User>) {
     this.id = user?.id;

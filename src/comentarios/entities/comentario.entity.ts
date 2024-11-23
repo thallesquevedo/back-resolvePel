@@ -8,13 +8,16 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-@Entity({ name: 'analytics' })
-export class Analytics {
+@Entity()
+export class Comentario {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
-  count: number;
+  comentario: string;
+
+  @Column({ default: 0 })
+  rating: number;
 
   @CreateDateColumn()
   created_at: Date;
@@ -22,16 +25,9 @@ export class Analytics {
   @CreateDateColumn()
   updated_at: Date;
 
-  @ManyToOne(() => User, (user) => user.id)
-  user: User;
-
-  @ManyToOne(() => ReqServico, (req_servico) => req_servico.id)
+  @ManyToOne(() => ReqServico, (reqServico) => reqServico.comentarios)
   reqServico: ReqServico;
 
-  constructor(analytics?: Partial<Analytics>) {
-    this.id = analytics?.id;
-    this.count = analytics?.count;
-    this.user = analytics?.user;
-    this.reqServico = analytics?.reqServico;
-  }
+  @ManyToOne(() => User, (user) => user.id)
+  user: User;
 }

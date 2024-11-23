@@ -9,6 +9,7 @@ import { ReqServicoModule } from './req_servico/req_servico.module';
 import { ServicosModule } from './servicos/servicos.module';
 import { UserModule } from './user/user.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { ComentariosModule } from './comentarios/comentarios.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     ServicosModule,
     ItemsModule,
     AnalyticsModule,
+    ComentariosModule,
   ],
   controllers: [AppController],
   providers: [AppService],

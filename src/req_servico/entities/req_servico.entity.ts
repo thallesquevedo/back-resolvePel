@@ -1,3 +1,5 @@
+import { Analytics } from 'src/analytics/entities/analytics.entity';
+import { Comentario } from 'src/comentarios/entities/comentario.entity';
 import { Item } from 'src/items/entities/item.entity';
 import { Servico } from 'src/servicos/entities/servico.entity';
 import { User } from 'src/user/entities/user.entity';
@@ -8,6 +10,7 @@ import {
   JoinTable,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -35,6 +38,12 @@ export class ReqServico {
   @JoinTable()
   items: Item[];
 
+  @OneToMany(() => Comentario, (comentario) => comentario.reqServico)
+  comentarios: Comentario[];
+
+  @OneToMany(() => Analytics, (analytics) => analytics.reqServico)
+  analytics: Analytics[];
+
   constructor(req_servico?: Partial<ReqServico>) {
     this.id = req_servico?.id;
     this.descricao = req_servico?.descricao;
@@ -43,5 +52,6 @@ export class ReqServico {
     this.user = req_servico?.user;
     this.servico = req_servico?.servico;
     this.items = req_servico?.items;
+    this.analytics = req_servico?.analytics;
   }
 }

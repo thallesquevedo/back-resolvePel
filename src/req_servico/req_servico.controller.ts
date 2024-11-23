@@ -25,9 +25,12 @@ export class ReqServicoController {
   @Get()
   @UseGuards(AuthGuard('jwt'))
   async findAllByUser(
-@Req()
-req: AuthRequest, page: number, limit: number, @Query()
-paginationDTO: PaginationDTO,
+    @Req()
+    req: AuthRequest,
+    page: number,
+    limit: number,
+    @Query()
+    paginationDTO: PaginationDTO,
   ) {
     return await this.reqServicoService.findAllByUserId(
       req.user,

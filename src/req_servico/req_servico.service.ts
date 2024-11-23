@@ -31,7 +31,7 @@ export class ReqServicoService {
 
     const [result, total] = await this.reqServicoRepository.findAndCount({
       where: { user: { id: user.id } },
-      relations: ['servico', 'items'],
+      relations: ['servico', 'items', 'comentarios'],
       order: { created_at: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,
@@ -48,7 +48,7 @@ export class ReqServicoService {
   async findPrestadorOrdemServicoById(ordemServicoId: string, user: User) {
     const ordemServico = await this.reqServicoRepository.findOne({
       where: { id: ordemServicoId },
-      relations: ['user', 'servico', 'items'],
+      relations: ['user', 'servico', 'items', 'comentarios'],
     });
 
     if (ordemServico.user.id !== user.id) {
@@ -67,8 +67,15 @@ export class ReqServicoService {
       .leftJoinAndSelect('reqServico.user', 'user')
       .leftJoinAndSelect('reqServico.servico', 'servico')
       .leftJoinAndSelect('reqServico.items', 'items')
+      .leftJoinAndSelect('reqServico.comentarios', 'comentarios')
       .where('reqServico.id = :id', { id: ordemServicoId })
-      .select(['reqServico.id', 'servico', 'items', 'reqServico.descricao'])
+      .select([
+        'reqServico.id',
+        'servico',
+        'items',
+        'reqServico.descricao',
+        'comentarios',
+      ])
       .getOne();
   }
 
@@ -175,7 +182,7 @@ export class ReqServicoService {
   async deleteOrdemServico(ordemServicoId: string, user: User) {
     const ordemServico = await this.reqServicoRepository.findOne({
       where: { id: ordemServicoId },
-      relations: ['user', 'servico', 'items'],
+      relations: ['user', 'servico', 'items', 'comentarios'],
     });
 
     if (ordemServico.user.id !== user.id) {
@@ -211,6 +218,7 @@ export class ReqServicoService {
       .leftJoinAndSelect('reqServico.user', 'user')
       .leftJoinAndSelect('reqServico.servico', 'servico')
       .leftJoinAndSelect('reqServico.items', 'items')
+      .leftJoinAndSelect('reqServico.comentarios', 'comentarios')
       .select([
         'reqServico.id',
         'reqServico.descricao',
@@ -219,11 +227,12 @@ export class ReqServicoService {
         'user.phone',
         'servico',
         'items',
+        'comentarios',
       ])
       .skip((page - 1) * limit)
       .take(limit);
 
-    if (search) {
+    if (search && search !== 'Todos') {
       query.andWhere('servico.name = :search', { search });
     }
 
@@ -243,6 +252,7 @@ export class ReqServicoService {
       .leftJoinAndSelect('reqServico.user', 'user')
       .leftJoinAndSelect('reqServico.servico', 'servico')
       .leftJoinAndSelect('reqServico.items', 'items')
+      .leftJoinAndSelect('reqServico.comentarios', 'comentarios')
       .where('reqServico.id = :id', { id: ordemServicoId })
       .select([
         'reqServico.id',
@@ -252,6 +262,7 @@ export class ReqServicoService {
         'user.phone',
         'servico',
         'items',
+        'comentarios',
       ])
       .getOne();
   }
