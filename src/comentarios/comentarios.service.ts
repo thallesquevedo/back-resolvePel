@@ -17,8 +17,8 @@ export class ComentariosService {
   ) {}
 
   async create(user: User, createComentarioDto: CreateComentarioDto) {
-    const { comentario, reqServicoId, userId } = createComentarioDto;
-    if (!comentario || !reqServicoId || !userId) {
+    const { comentario, reqServicoId } = createComentarioDto;
+    if (!comentario || !reqServicoId) {
       throw new BadRequestException({
         status: false,
         mensagem: {

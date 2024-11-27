@@ -68,6 +68,8 @@ export class ReqServicoService {
       .leftJoinAndSelect('reqServico.servico', 'servico')
       .leftJoinAndSelect('reqServico.items', 'items')
       .leftJoinAndSelect('reqServico.comentarios', 'comentarios')
+      .leftJoinAndSelect('comentarios.user', 'comentariosUser')
+      .addSelect([])
       .where('reqServico.id = :id', { id: ordemServicoId })
       .select([
         'reqServico.id',
@@ -75,6 +77,7 @@ export class ReqServicoService {
         'items',
         'reqServico.descricao',
         'comentarios',
+        'comentariosUser.name',
       ])
       .getOne();
   }
