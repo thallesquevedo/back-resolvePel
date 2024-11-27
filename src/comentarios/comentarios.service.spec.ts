@@ -61,7 +61,6 @@ describe('ComentariosService', () => {
     const createComentarioDto: CreateComentarioDto = {
       comentario: 'Ótimo serviço!',
       reqServicoId: 'req1',
-      userId: 'user1',
       rating: 5,
     };
 

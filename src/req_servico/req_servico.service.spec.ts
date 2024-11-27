@@ -161,22 +161,22 @@ describe('ReqServicoService', () => {
     it('should transform skip and limit to numbers', async () => {
       const dto = plainToInstance(PaginationDTO, { skip: '5', limit: '10' });
       
-      expect(dto.skip).toBe(5); // Verifica que o skip foi convertido para número
-      expect(dto.limit).toBe(10); // Verifica que o limit foi convertido para número
+      expect(dto.skip).toBe(5); 
+      expect(dto.limit).toBe(10);
     });
   
     it('should pass validation when skip and limit are positive numbers', async () => {
       const dto = plainToInstance(PaginationDTO, { skip: 5, limit: 10 });
       const errors = await validate(dto);
   
-      expect(errors.length).toBe(0); // Nenhum erro significa que a validação passou
+      expect(errors.length).toBe(0);
     });
   
     it('should fail validation when skip or limit are not positive numbers', async () => {
       const dto = plainToInstance(PaginationDTO, { skip: -5, limit: 0 });
       const errors = await validate(dto);
   
-      expect(errors.length).toBeGreaterThan(0); // Deve haver erros para valores negativos ou zero
+      expect(errors.length).toBeGreaterThan(0); 
       expect(errors.map(e => e.property)).toEqual(expect.arrayContaining(['skip', 'limit']));
     });
   });
@@ -220,19 +220,38 @@ describe('ReqServicoService', () => {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
         getOne: jest.fn().mockResolvedValueOnce(expectedReqServico),
       };
     
       jest.spyOn(reqServicoRepository, 'createQueryBuilder').mockImplementation(() => queryBuilderMock as any);
     
       const result = await service.findPrestadorOrdemServicoById(reqServicoId, user);
-    
       expect(result).toStrictEqual(expectedReqServico);
+
       expect(reqServicoRepository.findOne).toHaveBeenCalledWith({
         where: { id: reqServicoId },
         relations: ['user', 'servico', 'items', 'comentarios'],
       });
-      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledTimes(4); // Verifica se todos os joins foram aplicados
+
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('reqServico.user', 'user');
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('reqServico.servico', 'servico');
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('reqServico.items', 'items');
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('reqServico.comentarios', 'comentarios');
+      expect(queryBuilderMock.leftJoinAndSelect).toHaveBeenCalledWith('comentarios.user', 'comentariosUser');
+    
+      expect(queryBuilderMock.addSelect).toHaveBeenCalledWith([]);
+      expect(queryBuilderMock.where).toHaveBeenCalledWith('reqServico.id = :id', { id: reqServicoId });
+    
+      expect(queryBuilderMock.select).toHaveBeenCalledWith([
+        'reqServico.id',
+        'servico',
+        'items',
+        'reqServico.descricao',
+        'comentarios',
+        'comentariosUser.name',
+      ]);
+    
       expect(queryBuilderMock.getOne).toHaveBeenCalled();
     });
 

@@ -49,7 +49,6 @@ describe('ComentariosController', () => {
       const createComentarioDto: CreateComentarioDto = {
         reqServicoId: 'req1',
         comentario: 'Ótimo serviço!',
-        userId: 'user1',
         rating: 5,
       };
       const req: AuthRequest = {
@@ -83,7 +82,6 @@ describe('ComentariosController', () => {
       const createComentarioDto: CreateComentarioDto = {
         reqServicoId: 'req1',
         comentario: 'Ótimo serviço!',
-        userId: 'user1',
         rating: 6,
       };
       const req: AuthRequest = {
